@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>비트코인 매매 프로그램</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        // 기본으로 비트코인 차트 로드
+        loadChart('KRW-BTC');
+
+        // 차트를 불러오는 함수
+        function loadChart(market) {
+          $.getJSON('/live_analysis?market=' + market, function(data) {
+            $('#live-analysis').text(data.analysis);
+            if (data.chart_url) {
+              $('#live-chart').attr('src', data.chart_url);
+            }
+            if (data.virtual_balance !== undefined) {
+              $('#virtual-balance').text("가상 잔액: " + Number(data.virtual_balance).toLocaleString() + "₩");
+            }
+          });
+        }
+
+        // 실시간 차트 갱신
+        setInterval(function() {
+          loadChart('KRW-BTC');
+        }, 1000);
+
+        // 매수 폼 제출
+        $('#buy-form').submit(function(event) {
+          event.preventDefault();
+          $.post('/buy', $(this).serialize(), function(response) {
+            alert(response.message);
+            if (response.virtual_balance !== undefined) {
+              $('#virtual-balance').text("가상 잔액: " + Number(response.virtual_balance).toLocaleString() + "₩");
+            }
+          });
+        });
+
+        // 매도 폼 제출
+        $('#sell-form').submit(function(event) {
+          event.preventDefault();
+          $.post('/sell', $(this).serialize(), function(response) {
+            alert(response.message);
+            if (response.virtual_balance !== undefined) {
+              $('#virtual-balance').text("가상 잔액: " + Number(response.virtual_balance).toLocaleString() + "₩");
+            }
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <h1>비트코인 매매 프로그램</h1>
+    <p id="live-analysis">Loading...</p>
+    <p id="virtual-balance">가상 잔액: {{ "{:,.0f}".format(virtual_balance) }}₩</p>
+    {% if chart_url %}
+      <img id="live-chart" src="{{ chart_url }}" alt="Chart">
+    {% endif %}
+
+    <h2>매수/매도</h2>
+    <div>
+      <h3>전액 매수</h3>
+      <form id="buy-form">
+        <button type="submit">매수</button>
+      </form>
+    </div>
+    <div>
+      <h3>전액 매도</h3>
+      <form id="sell-form">
+        <button type="submit">매도</button>
+      </form>
+    </div>
+  </body>
+</html>
